@@ -12,11 +12,11 @@ app.options('*', cors());
 
 app.use(express.static('uploads'));
 app.use("/smtp", smtpRoutes);
+app.use(errorHandler);
 
 app.use((req, res, next) => {
   next(Error('Not found'));
 });
-app.use(errorHandler);
 
 let server;
 let PORT = process.env.PORT || 5000;

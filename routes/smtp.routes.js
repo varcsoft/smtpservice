@@ -7,7 +7,7 @@ const nodemailer = require("nodemailer");
 var multer = require('multer')
 require("dotenv").config();
 
-let upload = multer("/")
+let upload = multer({ dest: "uploads/" })
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: process.env.SMTP_PORT,
@@ -37,12 +37,15 @@ async function sendMails(emails,data) {
 
 router.use(auth.checkToken);
 
-router.get("/", async (req, res) => {
+router.get("/",upload.none(), async (req, res) => {
   res.status(200).send("hello");
 });
 
 router.post("/",upload.none(), async (req, res, next) => {
   const {emails,data}=req.body;
+  if(!emails || !data){
+    res.status(201).json("Please provide mail data");
+  }
   try {
     const i = await sendMails(emails,data);
     res.status(201).json(i + " Mails Have Been Sent Successfully");
@@ -53,7 +56,7 @@ router.post("/",upload.none(), async (req, res, next) => {
 
 router.post("/attachments", upload.array("files"), async (req, res, next) => {
   try {
-    res.status(201).json(req.files.length + "Files have been saved successfully");
+    res.status(201).json(req.files.length+" Files have been saved successfully");
   } catch (e) {
     next(e);
   }
