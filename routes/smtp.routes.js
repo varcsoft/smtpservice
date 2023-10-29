@@ -7,7 +7,7 @@ const nodemailer = require("nodemailer");
 var multer = require('multer')
 require("dotenv").config();
 
-let upload = multer("/")
+let upload = multer({ dest: "uploads/" })
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: process.env.SMTP_PORT,
