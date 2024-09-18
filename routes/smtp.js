@@ -36,7 +36,7 @@ router.post("/restartserver", async (req, res, next) => {
       }
       console.log(`stdout: ${stdout}`);
     });
-    return sendresponse(res, "Successfully restarted server", 201, req);
+    return sendresponse(res, 201, "Successfully restarted server", req);
   } catch (e) {
     next(e);
   }
