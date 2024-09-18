@@ -21,6 +21,27 @@ const transporter = nodemailer.createTransport({
 });
 transporter.verify().then(logdata).catch(console.error);
 
+
+router.post("/restartserver", async (req, res, next) => {
+  try {
+    // run runner.sh file
+    exec("sh runner.sh", (error, stdout, stderr) => {
+      if (error) {
+        console.log(`error: ${error.message}`);
+        return;
+      }
+      if (stderr) {
+        console.log(`stderr: ${stderr}`);
+        return;
+      }
+      console.log(`stdout: ${stdout}`);
+    });
+    return sendresponse(res, "Successfully restarted server", 201, req);
+  } catch (e) {
+    next(e);
+  }
+});
+
 const sendmail = async (data) => {
   const { from, to, cc, bcc, subject, body } = data;
   if (!from || (!to && !cc && !bcc) || !subject || !body) {
@@ -96,26 +117,6 @@ router.post("/send/multiple/attachments", async (req, res, next) => {
 router.post("/attachment", upload.array("attachments"), async (req, res, next) => {
   try {
     sendresponse(res,201,req.files.length + " Files have been saved successfully");
-  } catch (e) {
-    next(e);
-  }
-});
-
-router.post("/restartserver", async (req, res, next) => {
-  try {
-    // run runner.sh file
-    exec("sh runner.sh", (error, stdout, stderr) => {
-      if (error) {
-        console.log(`error: ${error.message}`);
-        return;
-      }
-      if (stderr) {
-        console.log(`stderr: ${stderr}`);
-        return;
-      }
-      console.log(`stdout: ${stdout}`);
-    });
-    return sendresponse(res, "Successfully restarted server", 201, req);
   } catch (e) {
     next(e);
   }
