@@ -6,6 +6,7 @@ const ApiError = require('../utils/ApiError');
 const nodemailer = require("nodemailer");
 var multer = require('multer');
 const { logdata, sendresponse } = require('../utils/utils');
+const { exec } = require("child_process");
 
 require("dotenv").config();
 const path = "uploads/";
@@ -42,6 +43,22 @@ router.post("/send", async (req, res, next) => {
   }
 });
 
+router.post("/send/multiple", async (req, res, next) => {
+  const { data } = req.body;
+  if (!data) {
+    throw new ApiError(400, "Please provide mail data");
+  }
+  try {
+    const responses = data.map(mail => {
+      return sendmail(mail);
+    });
+    const result = await Promise.all(responses);
+    sendresponse(res,201,"Mails have been sent successfully");
+  } catch (e) {
+    next(e);
+  }
+});
+
 router.post("/send/attachment", upload.array("attachments"), async (req, res, next) => {
   const { from, to, cc, bcc, subject, body } = req.body;
   if (!from || (!to && !cc && !bcc) || !subject || !body) {
@@ -60,7 +77,7 @@ router.post("/send/attachment", upload.array("attachments"), async (req, res, ne
   }
 });
 
-router.post("/send/multiple", async (req, res, next) => {
+router.post("/send/multiple/attachments", async (req, res, next) => {
   const { data } = req.body;
   if (!data) {
     throw new ApiError(400, "Please provide mail data");
@@ -79,6 +96,26 @@ router.post("/send/multiple", async (req, res, next) => {
 router.post("/attachment", upload.array("attachments"), async (req, res, next) => {
   try {
     sendresponse(res,201,req.files.length + " Files have been saved successfully");
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.post("/restartserver", async (req, res, next) => {
+  try {
+    // run runner.sh file
+    exec("sh runner.sh", (error, stdout, stderr) => {
+      if (error) {
+        console.log(`error: ${error.message}`);
+        return;
+      }
+      if (stderr) {
+        console.log(`stderr: ${stderr}`);
+        return;
+      }
+      console.log(`stdout: ${stdout}`);
+    });
+    return sendresponse(res, "Successfully restarted server", 201, req);
   } catch (e) {
     next(e);
   }
